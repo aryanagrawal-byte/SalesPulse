@@ -1,0 +1,21 @@
+# Sensitive config — real Supabase endpoint + API key live here.
+# Never commit this file. Use js/config.example.js as the template.
+js/config.js
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Dependencies (if you add a build step later)
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
