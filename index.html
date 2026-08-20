@@ -3,162 +3,44 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sales Performance Dashboard</title>
-
-<!-- Fonts & Icons -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-
-<!-- Chart.js -->
+<title>Sales Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
-<header id="topbar">
-  <div class="brand">
-    <span class="brand-icon"><i class="fa-solid fa-chart-line"></i></span>
-    <span class="brand-text">Sales <span class="accent">Dashboard</span></span>
-  </div>
-
-  <div class="status-group">
-    <span id="connection-status" class="status-badge status-loading">
-      <i class="fa-solid fa-circle-notch fa-spin"></i> Connecting…
-    </span>
-    <span id="last-updated" class="last-updated">Last updated: —</span>
-  </div>
-
-  <div class="actions">
-    <div class="date-picker-wrap">
-      <i class="fa-solid fa-calendar-day"></i>
-      <input type="date" id="report-date-picker" class="date-picker" title="Select Report Date">
+  <header>
+    <h1>Sales Dashboard</h1>
+    <div>
+      <input type="date" id="report-date-picker">
+      <button id="refresh-btn">Refresh</button>
     </div>
-    <select id="auto-refresh" title="Auto refresh interval">
-      <option value="0">Auto‑refresh: Off</option>
-      <option value="30000">Every 30s</option>
-      <option value="60000">Every 1 min</option>
-      <option value="300000">Every 5 min</option>
-    </select>
-    <button id="refresh-btn" class="btn btn-primary"><i class="fa-solid fa-rotate"></i> Refresh</button>
-    <button id="settings-btn" class="btn btn-icon" title="Connection settings"><i class="fa-solid fa-gear"></i></button>
-  </div>
-</header>
+  </header>
 
-<!-- Settings / Params panel -->
-<section id="settings-panel" class="settings-panel hidden">
-  <div class="settings-grid">
-    <div class="settings-field">
-      <label for="endpoint-url">Supabase RPC Endpoint URL</label>
-      <input id="endpoint-url" type="text" spellcheck="false">
+  <div id="error-banner" class="hidden"></div>
+  <div id="loading-state">Loading data...</div>
+
+  <main id="dashboard-content" class="hidden">
+    <div class="kpi-grid">
+      <div class="kpi"><div>Today Revenue</div><div id="val-today-rev">-</div></div>
+      <div class="kpi"><div>Today Orders</div><div id="val-today-ord">-</div></div>
+      <div class="kpi"><div>MTD Revenue</div><div id="val-mtd-rev">-</div></div>
+      <div class="kpi"><div>Top Performer</div><div id="val-top-perf">-</div></div>
     </div>
-    <div class="settings-field">
-      <label for="api-key">API Key (anon key)</label>
-      <input id="api-key" type="password" spellcheck="false">
+
+    <div class="charts">
+      <div><canvas id="chart-daily"></canvas></div>
+      <div><canvas id="chart-monthly"></canvas></div>
+      <div><canvas id="chart-dest"></canvas></div>
     </div>
-    <div class="settings-field settings-field-wide">
-      <label for="rpc-params">RPC Parameters (JSON body sent to the function, e.g. date filters)</label>
-      <textarea id="rpc-params" rows="3" spellcheck="false">{}</textarea>
-    </div>
-  </div>
-  <div class="settings-actions">
-    <button id="apply-settings" class="btn btn-primary"><i class="fa-solid fa-play"></i> Apply &amp; Fetch</button>
-    <button id="reset-settings" class="btn btn-ghost"><i class="fa-solid fa-arrow-rotate-left"></i> Reset to Defaults</button>
-    <span class="settings-hint">Settings are saved locally in your browser only.</span>
-  </div>
-</section>
 
-<main id="dashboard">
-
-  <section id="error-banner" class="error-banner hidden">
-    <i class="fa-solid fa-triangle-exclamation"></i>
-    <span id="error-text"></span>
-  </section>
-
-  <section id="loading-state" class="loading-state">
-    <i class="fa-solid fa-circle-notch fa-spin"></i>
-    <p>Fetching latest sales data…</p>
-  </section>
-
-  <div id="dashboard-content" class="hidden">
-    <!-- Top KPI Cards -->
-    <section class="cards-grid fixed-kpis">
-      <div class="kpi-card" id="kpi-today-rev">
-        <div class="kpi-icon"><i class="fa-solid fa-indian-rupee-sign"></i></div>
-        <div class="kpi-body">
-          <div class="kpi-label">Today Revenue</div>
-          <div class="kpi-value" id="val-today-rev">—</div>
-        </div>
-      </div>
-      <div class="kpi-card" id="kpi-today-ord">
-        <div class="kpi-icon"><i class="fa-solid fa-cart-shopping"></i></div>
-        <div class="kpi-body">
-          <div class="kpi-label">Today Orders</div>
-          <div class="kpi-value" id="val-today-ord">—</div>
-        </div>
-      </div>
-      <div class="kpi-card" id="kpi-mtd-rev">
-        <div class="kpi-icon"><i class="fa-solid fa-wallet"></i></div>
-        <div class="kpi-body">
-          <div class="kpi-label">MTD Revenue</div>
-          <div class="kpi-value" id="val-mtd-rev">—</div>
-        </div>
-      </div>
-      <div class="kpi-card" id="kpi-top-perf">
-        <div class="kpi-icon"><i class="fa-solid fa-crown"></i></div>
-        <div class="kpi-body">
-          <div class="kpi-label">Top Performer</div>
-          <div class="kpi-value" id="val-top-perf">—</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Charts -->
-    <section class="charts-grid three-col">
-      <div class="chart-card">
-        <h3>Daily Revenue Trend</h3>
-        <div class="canvas-wrap"><canvas id="chart-daily"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <h3>Monthly Performance</h3>
-        <div class="canvas-wrap"><canvas id="chart-monthly"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <h3>Top Destination (eSIM)</h3>
-        <div class="canvas-wrap relative"><canvas id="chart-dest"></canvas><div id="no-dest-data" class="empty-overlay hidden">No Data Available</div></div>
-      </div>
-    </section>
-
-    <!-- Leaderboard Table -->
-    <section class="tables-section">
-      <div class="table-card">
-        <h3>Sales Leaderboard</h3>
-        <div class="table-scroll">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Sales Representative</th>
-                <th>Today Sales</th>
-                <th>Today Revenue</th>
-                <th>MTD Sales</th>
-                <th>MTD Revenue</th>
-              </tr>
-            </thead>
-            <tbody id="leaderboard-tbody">
-              <!-- Rows injected via JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-  </div>
-
-</main>
-
-<footer id="page-footer">
-  <p>Connected to Supabase RPC <code>get_sale_dashboard</code> · Project <code id="footer-project-id">—</code></p>
-</footer>
+    <table>
+      <thead>
+        <tr><th>Rep</th><th>Today Sales</th><th>Today Rev</th><th>MTD Sales</th><th>MTD Rev</th></tr>
+      </thead>
+      <tbody id="leaderboard-tbody"></tbody>
+    </table>
+  </main>
 
 <script src="js/config.js"></script>
 <script src="js/main.js"></script>
